@@ -1,14 +1,17 @@
 import os
+import logging
 from typing import Union
 from fastapi import FastAPI
 from dotenv import load_dotenv
 import requests
 
+logging.basicConfig(level=logging.INFO)
 
+# Get config vars. If not in heroku, load the dotenv file
 is_prod = os.environ.get('IS_HEROKU', None)
 if not is_prod:
     load_dotenv()
-# get config vars
+
 transport_api_id = os.environ.get('TRANSPORT_API_ID')
 transport_api_key = os.environ.get('TRANSPORT_API_KEY')
 
@@ -41,7 +44,7 @@ def clean_departures(departure):
 
 def next_departures(from_station: str, to_station: str, n: int=2):
     response = requests.get(
-        f"https://transportapi.com/v3/uk/train/station/{from_station}/live.json?app_id=7166fe7b&app_key=d2f47147e4bf5234e6c4545907253a46&calling_at={to_station}&darwin=false&train_status=passenger"
+        f"https://transportapi.com/v3/uk/train/station/{from_station}/live.json?app_id={transport_api_id}&app_key={transport_api_key}&calling_at={to_station}&darwin=false&train_status=passenger"
     )
     output_dict = response.json()
     departures = output_dict['departures']['all']
