@@ -1,6 +1,19 @@
+import os
 from typing import Union
 from fastapi import FastAPI
+from dotenv import load_dotenv
 import requests
+
+
+is_prod = os.environ.get('IS_HEROKU', None)
+if not is_prod:
+    load_dotenv()
+# get config vars
+transport_api_id = os.environ.get('TRANSPORT_API_ID')
+transport_api_key = os.environ.get('TRANSPORT_API_KEY')
+
+
+
 
 app = FastAPI()
 
