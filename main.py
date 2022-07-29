@@ -20,6 +20,9 @@ transport_api_key = os.environ.get('TRANSPORT_API_KEY')
 class TrainRequest(BaseModel):
     message: str
 
+class TwilioPayload(BaseModel):
+
+
 app = FastAPI()
 
 
@@ -103,3 +106,7 @@ def next_arrival(to_station: str, from_station: str):
             return_string += f" Expected: {output['expected_arrival_time']}"
         return return_string
     
+@app.post("/twilio_message")
+def twilio_message(From: str = Form(...), Body: str = Form(...)):
+    print(Body)
+    return "hello"
