@@ -8,7 +8,7 @@ import requests
 from twilio.rest import Client
 from twilio.twiml.messaging_response import MessagingResponse
 
-client = Client('AC84bbd218dc7d1e3d6d367b44752322fd', '9a633c8f5bff864b9609a6a7db499631')
+client = Client('AC84bbd218dc7d1e3d6d367b44752322fd', 'e54f4cfb370bf5d270371d8feda7aa00')
 
 
 logging.basicConfig(level=logging.INFO)
@@ -121,3 +121,12 @@ def twilio_message(From: str = Form(...), Body: str = Form(...)):
     )
     return str(message)
     
+@app.get("/test")
+def test():
+    logging.info(client)
+    message = client.messages.create(
+        body="boff",
+        to="+447900055707",
+        from_="+447360279176"
+    )
+    return str(message)
