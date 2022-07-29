@@ -91,6 +91,7 @@ def next_arrival(to_station: str, from_station: str):
     response = requests.get(
         f"https://transportapi.com/v3/uk/train/station/{to_station}/live.json?app_id={transport_api_id}&app_key={transport_api_key}&called_at={from_station}&darwin=false&train_status=passenger&type=arrival"
     )
+    logging.info(response.json())
     output_list = response.json()['arrivals']['all']
     logging.info("returned %d", len(output_list))
     if len(output_list) == 0:
