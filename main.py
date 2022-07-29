@@ -5,8 +5,10 @@ from fastapi import FastAPI, Form
 from dotenv import load_dotenv
 from pydantic import BaseModel
 import requests
-
+from twilio.rest import Client
 from twilio.twiml.messaging_response import MessagingResponse
+
+client = Client('AC84bbd218dc7d1e3d6d367b44752322fd', '9a633c8f5bff864b9609a6a7db499631')
 
 
 logging.basicConfig(level=logging.INFO)
@@ -109,9 +111,12 @@ def next_arrival(to_station: str, from_station: str):
     
 @app.post("/twilio_message")
 def twilio_message(From: str = Form(...), Body: str = Form(...)):
-    print(Body)
-    tr = TrainRequest(message = Body)
-    resp = MessagingResponse()
-    resp.message(train_request(tr))
-    return str(resp)
+    message = train_request(tr)
+    logging.info(message)
+    message = client.messages.create(
+        body=message,
+        to="+447900055707",
+        from_="+447360279176"
+    )
+    return str(message)
     
