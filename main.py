@@ -76,6 +76,8 @@ def train_request(request_info: TrainRequest):
         source = tokens[3].upper()
         if len(tokens) > 4:
             n = int(tokens[4])
+        else:
+            n = 2
         logging.debug("Next train home from %s", source)
         return next_departures(source, "MIN", n=n)
     if request_info.message.lower().startswith("next train gla"):
