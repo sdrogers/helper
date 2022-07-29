@@ -1,7 +1,7 @@
 import os
 import logging
 from typing import Union
-from fastapi import FastAPI
+from fastapi import FastAPI, Form
 from dotenv import load_dotenv
 from pydantic import BaseModel
 import requests
@@ -19,8 +19,6 @@ transport_api_key = os.environ.get('TRANSPORT_API_KEY')
 
 class TrainRequest(BaseModel):
     message: str
-
-class TwilioPayload(BaseModel):
 
 
 app = FastAPI()
