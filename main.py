@@ -111,11 +111,12 @@ def next_arrival(to_station: str, from_station: str):
     
 @app.post("/twilio_message")
 def twilio_message(From: str = Form(...), Body: str = Form(...)):
+    tr = TrainRequest(message=Body)
     message = train_request(tr)
     logging.info(message)
     message = client.messages.create(
         body=message,
-        to="+447900055707",
+        to=From,
         from_="+447360279176"
     )
     return str(message)
