@@ -115,6 +115,8 @@ def twilio_message(From: str = Form(...), Body: str = Form(...)):
     tr = TrainRequest(message=Body)
     message = train_request(tr)
     logging.info(message)
+    if len(message) == 0:
+        message = "Nothing found"
     message = client.messages.create(
         body=message,
         to=From,
