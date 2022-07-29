@@ -4,3 +4,4 @@ uvicorn
 gunicorn
 python-dotenv
 python-multipart
+twilio
