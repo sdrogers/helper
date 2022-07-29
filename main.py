@@ -107,4 +107,5 @@ def next_arrival(to_station: str, from_station: str):
 @app.post("/twilio_message")
 def twilio_message(From: str = Form(...), Body: str = Form(...)):
     print(Body)
-    return "hello"
+    tr = TrainRequest(message = Body)
+    return train_request(tr)
