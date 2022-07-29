@@ -6,6 +6,9 @@ from dotenv import load_dotenv
 from pydantic import BaseModel
 import requests
 
+from twilio.twiml.messaging_response import MessagingResponse
+
+
 logging.basicConfig(level=logging.INFO)
 
 # Get config vars. If not in heroku, load the dotenv file
@@ -108,4 +111,7 @@ def next_arrival(to_station: str, from_station: str):
 def twilio_message(From: str = Form(...), Body: str = Form(...)):
     print(Body)
     tr = TrainRequest(message = Body)
-    return train_request(tr)
+    resp = MessagingResponse()
+    resp.message(train_request(tr))
+    return str(resp)
+    
