@@ -1,6 +1,6 @@
 import os
 import logging
-from typing import Union
+from typing import Union, Dict
 from fastapi import FastAPI, Form
 from dotenv import load_dotenv
 from pydantic import BaseModel
@@ -72,6 +72,67 @@ def next_departures(from_station: str, to_station: str, n: int=2):
     out_string += '\n'.join([format_departure(d) for d in dep])
     return out_string
 
+class Station:
+    def __init__(self, lat, lon):
+        self.lat = lat
+        self.lon = lon
+    def __str__(self):
+        return f"lonlat:{self.lon},{self.lat}"
+
+stations = {}
+
+def get_station_info(station_code):
+    if not station_code in stations:
+        logging.info("Quering for location of %s", station_code)
+        request = requests.get(
+            f"https://transportapi.com/v3/uk/places.json?app_id={transport_api_id}&app_key={transport_api_key}&query={station_code}&type=train_station"
+        )
+        try:
+            station_info = list(filter(lambda x: x['station_code'] == station_code, request.json()['member']))[0]
+            stations[station_code] = Station(station_info['latitude'], station_info['longitude'])
+        except Exception:
+            return None
+    else:
+        logging.info("Extracting info for %s from cache", station_code)
+    return stations[station_code]
+
+class Leg:
+    def __init__(self, train_part: Dict):
+        self.from_name = train_part['from_point_name']
+        self.to_name = train_part['to_point_name']
+        self.departure_time = train_part['departure_time']
+        self.arrival_time = train_part['arrival_time']
+
+    def __str__(self):
+        return f"{self.from_name} {self.departure_time} -> {self.arrival_time} {self.to_name}"
+
+def clean_route(route: Dict) -> str:
+    train_parts = [Leg(r) for r in route['route_parts'] if r['mode'] == 'train']
+    return_str = "\n".join(str(t) for t in train_parts)
+    return return_str
+        
+    
+
+@app.get("/planner/")
+def planner(from_station: str, to_station: str, n_fetch: int=2):
+    from_info = get_station_info(from_station)
+    to_info = get_station_info(to_station)
+    if from_info is None or to_info is None:
+        return "Error"
+
+    request_url = f"https://transportapi.com/v3/uk/public/journey/from/{str(from_info)}/to/{str(to_info)}.json?app_id={transport_api_id}&app_key={transport_api_key}&modes=train&service=silverrail"
+    logging.info(request_url)
+    try:
+        routes = requests.get(request_url).json()['routes']
+    except:
+        return "Error"
+    logging.info("Found %d routes", len(routes))
+    routes = routes[:min(n_fetch, len(routes))]
+    cleaned_routes = [clean_route(r) for r in routes]
+    ret = "\n\n".join([f"{i + 1}: {s}" for i, s in enumerate(cleaned_routes)])
+    logging.info(ret)
+    return ret
+
 
 @app.post("/train_request")
 def train_request(request_info: TrainRequest):
@@ -91,6 +152,15 @@ def train_request(request_info: TrainRequest):
         to_station = request_info.message.split()[2].upper()
         from_station = request_info.message.split()[3].upper()
         return next_arrival(to_station, from_station)
+    if request_into.message.lower().startswith("planner"):
+        tokens = request_info.message.lower().split()
+        from_station = tokens[1]
+        to_station = tokens[2]
+        if len(tokens) > 3:
+            n_fetch = int(tokens[3])
+        else:
+            n_fetch = 2
+        return planner(from_station, to_station, n_fetch=n_fetch)
 
 def next_arrival(to_station: str, from_station: str):
     logging.info("Next arrival at %s from %s", to_station, from_station)
