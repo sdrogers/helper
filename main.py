@@ -8,7 +8,6 @@ import requests
 from twilio.rest import Client
 from twilio.twiml.messaging_response import MessagingResponse
 
-client = Client('AC84bbd218dc7d1e3d6d367b44752322fd', 'e54f4cfb370bf5d270371d8feda7aa00')
 
 
 logging.basicConfig(level=logging.INFO)
@@ -20,6 +19,11 @@ if not is_prod:
 
 transport_api_id = os.environ.get('TRANSPORT_API_ID')
 transport_api_key = os.environ.get('TRANSPORT_API_KEY')
+
+twilio_api_id = os.environ.get('TWILIO_API_ID')
+twilio_api_key = os.environ.get('TWILIO_API_KEY')
+
+client = Client(twilio_api_id, twilio_api_key)
 
 
 class TrainRequest(BaseModel):
