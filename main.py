@@ -88,6 +88,7 @@ def get_station_info(station_code):
             f"https://transportapi.com/v3/uk/places.json?app_id={transport_api_id}&app_key={transport_api_key}&query={station_code}&type=train_station"
         )
         try:
+            logging.info(request.json())
             station_info = list(filter(lambda x: x['station_code'] == station_code, request.json()['member']))[0]
             stations[station_code] = Station(station_info['latitude'], station_info['longitude'])
         except Exception:
