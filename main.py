@@ -134,7 +134,7 @@ def twilio_message(From: str = Form(...), Body: str = Form(...)):
 def test():
     logging.info(client)
     message = client.messages.create(
-        body="boff",
+        body="Test message sending",
         to="+447900055707",
         from_="+447360279176"
     )
