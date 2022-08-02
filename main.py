@@ -152,7 +152,7 @@ def train_request(request_info: TrainRequest):
         to_station = request_info.message.split()[2].upper()
         from_station = request_info.message.split()[3].upper()
         return next_arrival(to_station, from_station)
-    if request_into.message.lower().startswith("planner"):
+    if request_info.message.lower().startswith("planner"):
         tokens = request_info.message.lower().split()
         from_station = tokens[1]
         to_station = tokens[2]
@@ -191,7 +191,7 @@ def twilio_message(From: str = Form(...), Body: str = Form(...)):
     tr = TrainRequest(message=Body)
     message = train_request(tr)
     logging.info(message)
-    if len(message) == 0:
+    if message is None or len(message) == 0:
         message = "Nothing found"
     message = client.messages.create(
         body=message,
