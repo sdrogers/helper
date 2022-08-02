@@ -118,14 +118,14 @@ def planner(from_station: str, to_station: str, n_fetch: int=2):
     from_info = get_station_info(from_station)
     to_info = get_station_info(to_station)
     if from_info is None or to_info is None:
-        return "Error"
+        return "Error accessing station info"
 
     request_url = f"https://transportapi.com/v3/uk/public/journey/from/{str(from_info)}/to/{str(to_info)}.json?app_id={transport_api_id}&app_key={transport_api_key}&modes=train&service=silverrail"
     logging.info(request_url)
     try:
         routes = requests.get(request_url).json()['routes']
     except:
-        return "Error"
+        return "Error performing get"
     logging.info("Found %d routes", len(routes))
     routes = routes[:min(n_fetch, len(routes))]
     cleaned_routes = [clean_route(r) for r in routes]
