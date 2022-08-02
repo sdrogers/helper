@@ -104,9 +104,10 @@ class Leg:
         self.to_name = train_part['to_point_name']
         self.departure_time = train_part['departure_time']
         self.arrival_time = train_part['arrival_time']
+        self.destination = train_part['destination']
 
     def __str__(self):
-        return f"{self.from_name} {self.departure_time} -> {self.arrival_time} {self.to_name}"
+        return f"{self.from_name} {self.departure_time} -> {self.arrival_time} {self.to_name} (train to {self.destination})"
 
 def clean_route(route: Dict) -> str:
     train_parts = [Leg(r) for r in route['route_parts'] if r['mode'] == 'train']
