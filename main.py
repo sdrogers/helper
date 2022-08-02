@@ -82,6 +82,7 @@ class Station:
 stations = {}
 
 def get_station_info(station_code):
+    station_code = station_code.upper()
     if not station_code in stations:
         logging.info("Quering for location of %s", station_code)
         request = requests.get(
