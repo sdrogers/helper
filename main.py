@@ -7,6 +7,9 @@ from pydantic import BaseModel
 import requests
 from twilio.rest import Client
 from twilio.twiml.messaging_response import MessagingResponse
+from datetime import date
+
+from menus import MENU
 
 
 
@@ -164,6 +167,24 @@ def train_request(request_info: TrainRequest):
         else:
             n_fetch = 2
         return planner(from_station, to_station, n_fetch=n_fetch)
+
+@app.get("/menu")
+def menu():
+    today = date.today()
+    return_dict = {'date': today}
+    start_date = date(2022, 8, 15)
+    day_diff = (today - start_date).days
+    week_diff = day_diff // 7
+    if week_diff % 2 == 0:
+        week = 1
+    else:
+        week = 2
+    return_dict['week'] = week
+    day_of_week = today.isoweekday()
+    return_dict['day_of_week'] = day_of_week
+    return_dict['menu'] = MENU[week][day_of_week]
+    
+    return return_dict
 
 def next_arrival(to_station: str, from_station: str):
     logging.info("Next arrival at %s from %s", to_station, from_station)
