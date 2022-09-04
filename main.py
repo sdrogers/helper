@@ -205,9 +205,17 @@ def process_rttp_services(response: Dict, n: int) -> str:
 def next_trains(from_station: str, to_station: str, n: int):
     auth = HTTPBasicAuth(rttp_id, rttp_pw)
     request_url = f"https://api.rtt.io/api/v1/json/search/{from_station}/to/{to_station}"
-    response = requests.get(request_url, auth=auth).json()
-    neat_services = process_rttp_services(response, n)
-    return_str = "\n".join([str(s) for s in neat_services])
+    response = requests.get(request_url, auth=auth)
+    print(response.status_code)
+    if response.status_code == 200:
+        response = response.json()
+        if "error" in response:
+            return response['error']
+        else:
+            neat_services = process_rttp_services(response, n)
+            return_str = "\n".join([str(s) for s in neat_services])
+    else:
+        return_str = "Error getting response. Check station codes"
     return return_str
 
 @app.get("/menu")
