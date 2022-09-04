@@ -183,22 +183,25 @@ class Service:
         return f"{self.d_time} -> {self.a_time}, platform {self.platform} ({self.plat_conf})"
 
 def process_rttp_services(response: Dict, n: int) -> str:
-    n_services = len(response['services'])
-    n = min(n, n_services)
-    neat_services = []
-    for i in range(n):
-        this_service = response['services'][i]
-        neat_services.append(
-            Service(
-                this_service['locationDetail']['origin'][0]['publicTime'],
-                this_service['locationDetail']['destination'][0]['publicTime'],
-                this_service['locationDetail']['platform'],
-                'confirmed' if this_service['locationDetail']['platformConfirmed'] else "uncomfirmed"
-            ) 
-        )   
-    return neat_services
+    if response['services']:
+        n_services = len(response['services'])
+        n = min(n, n_services)
+        neat_services = []
+        for i in range(n):
+            this_service = response['services'][i]
+            neat_services.append(
+                Service(
+                    this_service['locationDetail']['origin'][0]['publicTime'],
+                    this_service['locationDetail']['destination'][0]['publicTime'],
+                    this_service['locationDetail']['platform'],
+                    'confirmed' if this_service['locationDetail']['platformConfirmed'] else "uncomfirmed"
+                ) 
+            )   
+        return neat_services
+    else:
+        return ["No services found"]
 
-
+@app.get("/next_trains")
 def next_trains(from_station: str, to_station: str, n: int):
     auth = HTTPBasicAuth(rttp_id, rttp_pw)
     request_url = f"https://api.rtt.io/api/v1/json/search/{from_station}/to/{to_station}"
