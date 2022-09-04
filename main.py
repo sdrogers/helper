@@ -5,6 +5,7 @@ from fastapi import FastAPI, Form
 from dotenv import load_dotenv
 from pydantic import BaseModel
 import requests
+from requests.auth import HTTPBasicAuth
 from twilio.rest import Client
 from twilio.twiml.messaging_response import MessagingResponse
 from datetime import date
@@ -25,6 +26,9 @@ transport_api_key = os.environ.get('TRANSPORT_API_KEY')
 
 twilio_api_id = os.environ.get('TWILIO_API_ID')
 twilio_api_key = os.environ.get('TWILIO_API_KEY')
+
+rttp_id = os.environ.get('ATTPID')
+rttp_pw = os.environ.get('ATTPPW')
 
 client = Client(twilio_api_id, twilio_api_key)
 
@@ -166,7 +170,42 @@ def train_request(request_info: TrainRequest):
             n_fetch = int(tokens[3])
         else:
             n_fetch = 2
-        return planner(from_station, to_station, n_fetch=n_fetch)
+        return next_trains(from_station, to_station, n_fetch)
+
+class Service:
+    def __init__(self, d_time, a_time, platform, plat_conf):
+        self.d_time = d_time
+        self.a_time = a_time
+        self.platform = platform
+        self.plat_conf = plat_conf
+
+    def __str__(self):
+        return f"{self.d_time} -> {self.a_time}, platform {self.platform} ({self.plat_conf})"
+
+def process_rttp_services(response: Dict, n: int) -> str:
+    n_services = len(response['services'])
+    n = min(n, n_services)
+    neat_services = []
+    for i in range(n):
+        this_service = response['services'][i]
+        neat_services.append(
+            Service(
+                this_service['locationDetail']['origin'][0]['publicTime'],
+                this_service['locationDetail']['destination'][0]['publicTime'],
+                this_service['locationDetail']['platform'],
+                'confirmed' if this_service['locationDetail']['platformConfirmed'] else "uncomfirmed"
+            ) 
+        )   
+    return neat_services
+
+
+def next_trains(from_station: str, to_station: str, n: int):
+    auth = HTTPBasicAuth(rttp_id, rttp_pw)
+    request_url = f"https://api.rtt.io/api/v1/json/search/{from_station}/to/{to_station}"
+    response = requests.get(request_url, auth=auth).json()
+    neat_services = process_rttp_services(response, n)
+    return_str = "\n".join([str(s) for s in neat_services])
+    return return_str
 
 @app.get("/menu")
 def menu():
