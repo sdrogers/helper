@@ -8,7 +8,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 from twilio.rest import Client
 from twilio.twiml.messaging_response import MessagingResponse
-from datetime import date
+from datetime import date, datetime
 
 from menus import MENU
 
@@ -182,17 +182,19 @@ class Service:
     def __str__(self):
         return f"{self.d_time} -> {self.a_time}, platform {self.platform} ({self.plat_conf})"
 
-def process_rttp_services(response: Dict, n: int) -> str:
+def process_rttp_services(response: Dict, dest: str, n: int) -> str:
     if response['services']:
         n_services = len(response['services'])
         n = min(n, n_services)
         neat_services = []
         for i in range(n):
             this_service = response['services'][i]
+            service_id = this_service['serviceUid']
+            times = service_arrival(service_id, dest.upper())
             neat_services.append(
                 Service(
                     this_service['locationDetail']['origin'][0]['publicTime'],
-                    this_service['locationDetail']['destination'][0]['publicTime'],
+                    times['arrive'],
                     this_service['locationDetail']['platform'],
                     'confirmed' if this_service['locationDetail']['platformConfirmed'] else "uncomfirmed"
                 ) 
@@ -212,11 +214,25 @@ def next_trains(from_station: str, to_station: str, n: int):
         if "error" in response:
             return response['error']
         else:
-            neat_services = process_rttp_services(response, n)
+            neat_services = process_rttp_services(response, to_station, n)
             return_str = "\n".join([str(s) for s in neat_services])
     else:
         return_str = "Error getting response. Check station codes"
     return return_str
+
+@app.get("/service_arrival")
+def service_arrival(service_id: str, calling_point: str):
+    auth = HTTPBasicAuth(rttp_id, rttp_pw)
+    year = datetime.now().year
+    month = datetime.now().month
+    day = datetime.now().day
+    request_url = f"https://api.rtt.io/api/v1/json/service/{service_id}/{year}/{month:02}/{day:02}"
+    response = requests.get(request_url, auth=auth)
+    locations = response.json()['locations']
+    locations = list(filter(lambda x: x['crs'] == calling_point.upper(), locations))[0]
+    departure_time = locations['origin'][0]['publicTime']
+    arrival_time = locations['realtimeArrival']
+    return {'depart': departure_time, 'arrive': arrival_time}
 
 @app.get("/menu")
 def menu():
